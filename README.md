@@ -1,1 +1,1 @@
-# Friend-of-an-analyst
+# Friend of an Analyst
