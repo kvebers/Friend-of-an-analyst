@@ -18,7 +18,6 @@ if (window.location.hostname.includes("youtube.com")) {
 
     mobileThumbnails.forEach((thumbnailCover) => {
       if (thumbnailCover.querySelector(".custom-overlay")) return;
-
       const parentLink = thumbnailCover.closest("a");
       if (!parentLink) return;
 
@@ -60,7 +59,7 @@ if (window.location.hostname.includes("youtube.com")) {
     });
   }
 
-  async function createOverlay(videoId) {
+  function createOverlay(videoId) {
     const overlay = document.createElement("div");
     overlay.className = "custom-overlay";
     overlay.style.cssText = `
@@ -77,7 +76,33 @@ if (window.location.hostname.includes("youtube.com")) {
       pointer-events: none;
     `;
     overlay.textContent = videoId;
+    fetchOverlayText(videoId).then((text) => {
+      if (text) {
+        overlay.textContent = text;
+      }
+    });
     return overlay;
+  }
+
+  async function fetchOverlayText(videoId) {
+    try {
+      const response = await fetch("http://localhost:3000/v2/video", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: videoId }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`Received text for ${videoId}:`, data.text);
+        return data.text;
+      } else {
+        console.error("API error:", response.status, response.statusText);
+        return null;
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+      return null;
+    }
   }
 
   function extractVideoId(url) {
