@@ -1,0 +1,19 @@
+{
+  "name": "Friend of an analyst",
+  "description": "Analysis of Articles",
+  "version": "1.0",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": "logo.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["logic.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "permissions": ["storage", "activeTab", "declarativeContent"],
+  "host_permissions": ["<all_urls>"]
+}

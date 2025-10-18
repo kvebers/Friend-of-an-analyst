@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        width: 200px;
+        padding: 20px;
+        text-align: center;
+      }
+      img {
+        width: 64px;
+        height: 64px;
+        margin-bottom: 16px;
+      }
+      button {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: background 0.2s;
+      }
+      .enabled {
+        background: #0f9d58;
+        color: white;
+      }
+      .enabled:hover {
+        background: #0d8348;
+      }
+      .disabled {
+        background: #e8eaed;
+        color: #5f6368;
+      }
+      .disabled:hover {
+        background: #dadce0;
+      }
+    </style>
+  </head>
+  <body>
+    <img src="logo.png" alt="Logo" />
+    <button id="toggle" class="enabled">Disable</button>
+    <script src="layout.js"></script>
+    </script>
+  </body>
+</html>
