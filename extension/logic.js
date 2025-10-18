@@ -1,5 +1,9 @@
 if (window.location.hostname.includes("youtube.com")) {
   const overlayMap = new Map();
+
+  let currentVideoId = null;
+  let videoOverlay = null;
+
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "logLinks") {
       const links = document.querySelectorAll("a");
@@ -9,10 +13,13 @@ if (window.location.hostname.includes("youtube.com")) {
     } else if (request.action === "updateOverlayText") {
       updateOverlayText(request.videoId, request.text);
       sendResponse({ success: true });
+    } else if (request.action === "updateVideoOverlayText") {
+      updateVideoOverlayText(request.videoId, request.text);
+      sendResponse({ success: true });
     }
   });
 
-  function addOverlays() {
+  function addThumbnailOverlays() {
     const mobileThumbnails = document.querySelectorAll("ytm-thumbnail-cover");
     console.log("Found mobile thumbnails:", mobileThumbnails.length);
 
@@ -24,7 +31,7 @@ if (window.location.hostname.includes("youtube.com")) {
       const videoId = extractVideoId(parentLink.href);
       if (!videoId) return;
 
-      const overlay = createOverlay(videoId);
+      const overlay = createThumbnailOverlay(videoId);
       thumbnailCover.style.position = "relative";
       thumbnailCover.appendChild(overlay);
       overlayMap.set(videoId, overlay);
@@ -40,11 +47,12 @@ if (window.location.hostname.includes("youtube.com")) {
       if (!parentLink) return;
       const videoId = extractVideoId(parentLink.href);
       if (!videoId) return;
-      const overlay = createOverlay(videoId);
+      const overlay = createThumbnailOverlay(videoId);
       thumbnailView.style.position = "relative";
       thumbnailView.appendChild(overlay);
       overlayMap.set(videoId, overlay);
     });
+
     const searchThumbnails = document.querySelectorAll("ytd-thumbnail");
     searchThumbnails.forEach((thumbnail) => {
       if (thumbnail.querySelector(".custom-overlay")) return;
@@ -52,14 +60,14 @@ if (window.location.hostname.includes("youtube.com")) {
       if (!link) return;
       const videoId = extractVideoId(link.href);
       if (!videoId) return;
-      const overlay = createOverlay(videoId);
+      const overlay = createThumbnailOverlay(videoId);
       thumbnail.style.position = "relative";
       thumbnail.appendChild(overlay);
       overlayMap.set(videoId, overlay);
     });
   }
 
-  function createOverlay(videoId) {
+  function createThumbnailOverlay(videoId) {
     const overlay = document.createElement("div");
     overlay.className = "custom-overlay";
     overlay.style.cssText = `
@@ -76,7 +84,7 @@ if (window.location.hostname.includes("youtube.com")) {
       pointer-events: none;
     `;
     overlay.textContent = videoId;
-    fetchOverlayText(videoId).then((text) => {
+    fetchThumbnailOverlayText(videoId).then((text) => {
       if (text) {
         overlay.textContent = text;
       }
@@ -84,7 +92,7 @@ if (window.location.hostname.includes("youtube.com")) {
     return overlay;
   }
 
-  async function fetchOverlayText(videoId) {
+  async function fetchThumbnailOverlayText(videoId) {
     try {
       const response = await fetch("http://localhost/v2/video", {
         method: "POST",
@@ -93,15 +101,105 @@ if (window.location.hostname.includes("youtube.com")) {
       });
       if (response.ok) {
         const data = await response.json();
-        console.log(`Received text for ${videoId}:`, data.text);
+        console.log(`Received thumbnail text for ${videoId}:`, data.text);
         return data.text;
       } else {
-        console.error("API error:", response.status, response.statusText);
+        console.error(
+          "Thumbnail API error:",
+          response.status,
+          response.statusText
+        );
         return null;
       }
     } catch (error) {
-      console.error("Network error:", error);
       return null;
+    }
+  }
+
+  function updateOverlayText(videoId, text) {
+    const overlay = overlayMap.get(videoId);
+    if (overlay) overlay.textContent = text;
+  }
+
+  function updateAllThumbnailOverlays(referenceData) {
+    for (const [videoId, text] of Object.entries(referenceData)) {
+      updateOverlayText(videoId, text);
+    }
+  }
+
+  function addVideoOverlay() {
+    if (videoOverlay && videoOverlay.parentNode) {
+      videoOverlay.remove();
+    }
+
+    const videoContainer = document.querySelector("#movie_player");
+    if (!videoContainer) {
+      console.log("Video player not found");
+      return;
+    }
+
+    const videoId = extractVideoIdFromUrl(window.location.href);
+    if (!videoId) {
+      console.log("Could not extract video ID");
+      return;
+    }
+
+    if (currentVideoId === videoId && videoOverlay) {
+      return;
+    }
+
+    currentVideoId = videoId;
+    videoOverlay = document.createElement("div");
+    videoOverlay.className = "custom-video-overlay";
+    videoOverlay.style.cssText = `
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      z-index: 1000;
+      pointer-events: none;
+      max-width: 300px;
+      word-wrap: break-word;
+    `;
+    videoOverlay.textContent = `Loading... ${videoId}`;
+
+    videoContainer.appendChild(videoOverlay);
+    console.log("Added video overlay for:", videoId);
+
+    fetchVideoOverlayText(videoId).then((text) => {
+      if (text && videoOverlay) {
+        videoOverlay.textContent = text;
+      }
+    });
+  }
+
+  async function fetchVideoOverlayText(videoId) {
+    try {
+      const response = await fetch("http://localhost/v1/video", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: videoId }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.text;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function updateVideoOverlayText(videoId, text) {
+    if (currentVideoId === videoId && videoOverlay) {
+      videoOverlay.textContent = text;
     }
   }
 
@@ -110,21 +208,48 @@ if (window.location.hostname.includes("youtube.com")) {
     return match ? match[1] : null;
   }
 
-  function updateOverlayText(videoId, text) {
-    const overlay = overlayMap.get(videoId);
-    if (overlay) overlay.textContent = text;
+  function extractVideoIdFromUrl(url) {
+    return extractVideoId(url);
   }
 
-  function updateAllOverlays(referenceData) {
-    for (const [videoId, text] of Object.entries(referenceData)) {
-      updateOverlayText(videoId, text);
+  function initialize() {
+    addThumbnailOverlays();
+    addVideoOverlay();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initialize);
+  } else {
+    initialize();
+  }
+
+  const observer = new MutationObserver(() => {
+    addThumbnailOverlays();
+    const videoContainer = document.querySelector("#movie_player");
+    if (videoContainer && !videoOverlay) {
+      addVideoOverlay();
     }
-  }
+  });
 
-  if (document.readyState === "loading")
-    document.addEventListener("DOMContentLoaded", addOverlays);
-  else addOverlays();
-  const observer = new MutationObserver(addOverlays);
-  observer.observe(document.body, { childList: true, subtree: true });
-  window.updateYouTubeOverlays = updateAllOverlays;
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+
+  let lastUrl = window.location.href;
+  new MutationObserver(() => {
+    const currentUrl = window.location.href;
+    if (currentUrl !== lastUrl) {
+      lastUrl = currentUrl;
+      setTimeout(addVideoOverlay, 500);
+    }
+  }).observe(document.querySelector("title"), {
+    childList: true,
+    subtree: true,
+  });
+
+  window.updateYouTubeOverlays = updateAllThumbnailOverlays;
+  window.updateYouTubeVideoOverlay = (videoId, text) => {
+    updateVideoOverlayText(videoId, text);
+  };
 }
