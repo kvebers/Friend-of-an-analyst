@@ -45,10 +45,8 @@ if (window.location.hostname.includes("youtube.com")) {
       thumbnailView.style.position = "relative";
       thumbnailView.appendChild(overlay);
       overlayMap.set(videoId, overlay);
-      console.log("Added desktop overlay for video:", videoId);
     });
     const searchThumbnails = document.querySelectorAll("ytd-thumbnail");
-    console.log("Found search thumbnails:", searchThumbnails.length);
     searchThumbnails.forEach((thumbnail) => {
       if (thumbnail.querySelector(".custom-overlay")) return;
       const link = thumbnail.querySelector("a#thumbnail");
@@ -59,11 +57,10 @@ if (window.location.hostname.includes("youtube.com")) {
       thumbnail.style.position = "relative";
       thumbnail.appendChild(overlay);
       overlayMap.set(videoId, overlay);
-      console.log("Added search overlay for video:", videoId);
     });
   }
 
-  function createOverlay(videoId) {
+  async function createOverlay(videoId) {
     const overlay = document.createElement("div");
     overlay.className = "custom-overlay";
     overlay.style.cssText = `
@@ -79,7 +76,7 @@ if (window.location.hostname.includes("youtube.com")) {
       z-index: 100;
       pointer-events: none;
     `;
-    overlay.textContent = "Default Text";
+    overlay.textContent = videoId;
     return overlay;
   }
 
