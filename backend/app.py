@@ -10,8 +10,6 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-
-
 db = SQLAlchemy()
 
 class Video(db.Model):
@@ -46,19 +44,21 @@ def get_tranctipt_from_id(video_id):
 
 @app.route("/v1/video", methods=["POST"])
 def get_main_video():
-    url_information = request.json.get("url").strip()
+    data = request.get_json()
+    if not data or "url" not in data:
+        return jsonify({"error": "xd'"}), 400
+    url_information = data["url"].strip()
     transcript = get_tranctipt_from_id(url_information)
     print(transcript)
-    return "Hello " + url_information
+    return jsonify({"text": f"Analysis"})
 
 @app.route("/v2/video", methods=["POST"])
 def get_videos_in_view():
     data = request.get_json()
     if not data or "url" not in data:
-        return jsonify({"error": "Missing 'url' in request"}), 400
+        return jsonify({"error": "xd'"}), 400
     url_information = data["url"].strip()
-    print("Received video ID:", url_information)
-    return jsonify({"text": f"Not analyzed yet proceed with causion"})
+    return jsonify({"text": f"Proceed with causion"})
 
 with app.app_context():
     db.create_all()
