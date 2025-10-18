@@ -1,5 +1,5 @@
 run_docker:
-	docker-compose up -d
+	docker-compose up
 
 
 create_test_env_windows:
