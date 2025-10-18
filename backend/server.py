@@ -14,7 +14,7 @@ def get_main_video():
 def get_videos_in_view():
     url_information = request.json.get("url")
     url_information = url_information.strip()
-    return "Hello " + url_information
+    return "Woah Text Was Changed"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=3000, debug=True)
