@@ -86,7 +86,7 @@ if (window.location.hostname.includes("youtube.com")) {
 
   async function fetchOverlayText(videoId) {
     try {
-      const response = await fetch("http://localhost:3000/v2/video", {
+      const response = await fetch("http://localhost/v2/video", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: videoId }),
