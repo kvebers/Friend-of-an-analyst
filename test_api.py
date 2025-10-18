@@ -2,8 +2,8 @@ import requests
 
 url = "http://localhost:3000/v1/video"
 data = {
-    "url": " https://example.com/video"
+    "url": "CYlon2tvywA"
 }
-response = requests.post(url, json=data)
+response = requests.get(url, json=data)
 print("Status code:", response.status_code)
 print("Response body:", response.text)
