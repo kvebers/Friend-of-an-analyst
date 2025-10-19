@@ -15,8 +15,8 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble import RandomForestClassifier
 import joblib
 
-fake_data = pd.read_csv('data/Fake.csv') #atver failu ar aplamo informāciju (lai mācītos izmanto)
-true_data = pd.read_csv('data/True.csv') #atver failu ar patieso informāciju
+fake_data = pd.read_csv('data_train/Fake.csv') #atver failu ar aplamo informāciju (lai mācītos izmanto)
+true_data = pd.read_csv('data_train/True.csv') #atver failu ar patieso informāciju
 
 fake_data['class'] = 0
 true_data['class'] = 1

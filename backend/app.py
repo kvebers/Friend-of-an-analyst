@@ -2,12 +2,11 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from sqlalchemy.dialects.postgresql import ARRAY
 from datetime import datetime
-from db import db, setup_db, add_or_update_video 
+from db import Video, db, setup_db, add_or_update_video 
 import os
 from transcript import get_transcript_from_id
 from rag import rag
 from clasify import predict_label
-import google.generativeai as genai
 
 
 
@@ -22,20 +21,29 @@ setup_db(app)
 def post_main_video():
     data = request.get_json()
     if not data or "url" not in data:
-        return jsonify({"error": "xd'"}), 400
+        return jsonify({"error": "URL is required"}), 400
     url_information = data["url"].strip()
-    print(url_information)
+    print(url_information)    
     transcript = get_transcript_from_id(url_information)
-    label = predict_label(transcript)
+    label = predict_label(transcript)    
+    add_or_update_video(
+        youtube_id=url_information,
+        label=label
+    )
     return jsonify({"text": label})
+
 
 @app.route("/v2/video", methods=["POST"])
 def post_videos_in_view():
     data = request.get_json()
     if not data or "url" not in data:
-        return jsonify({"error": "xd'"}), 400
+        return jsonify({"error": "URL is required"}), 400
     url_information = data["url"].strip()
-    return jsonify({"text": f"Proceed with causion"})
+    video = Video.query.filter_by(youtube_id=url_information).first()
+    if video and video.label:
+        return jsonify({"text": video.label})
+    else:
+        return jsonify({"text": "Proceed with caution"})
 
 @app.route("/v1/rag", methods=["POST"])
 def post_rag():
@@ -45,16 +53,6 @@ def post_rag():
     query = data["prompt"].strip()
     print(query)
     return rag(query=query)
-
-# @app.route("/v1/agenda", methods=["POST"])
-# def post_rag():
-#     data = request.get_json()
-#     if not data or "url" not in data:
-#         return jsonify({"error": "xd'"}), 400
-#     # response = client.models.generate_content(
-#     #     model="gemini-2.5-flash", contents="Explain how AI works in a few words"
-#     # )
-#     return jsonify({response.text})
 
 with app.app_context():
     db.create_all()

@@ -10,8 +10,8 @@ def get_transcript_from_id(video_id):
             video_id, 
             languages=['en', 'en-US', 'en-GB']
         )
+        print(transcript)
         return " ".join([entry["text"] for entry in transcript])
-    
     except NoTranscriptFound:
         try:
             transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
@@ -27,10 +27,12 @@ def get_transcript_from_id(video_id):
     except VideoUnavailable:
         return ""
     except Exception as e:
-
-        time.sleep(2)
         try:
             transcript = YouTubeTranscriptApi.get_transcript(video_id)
             return " ".join([entry["text"] for entry in transcript])
         except:
             return ""
+        
+
+if __name__ == "__main__":
+    get_transcript_from_id("ANB-Drr1rD4")
