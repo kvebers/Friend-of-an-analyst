@@ -5,6 +5,7 @@ def get_transcript_from_id(video_id):
     """
     Getting Rate Blocked hahaha
     """
+    print("I am here")
     try:
         transcript = YouTubeTranscriptApi.get_transcript(
             video_id, 
