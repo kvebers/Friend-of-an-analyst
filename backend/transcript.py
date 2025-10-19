@@ -7,7 +7,6 @@ def get_transcript_from_id(video_id):
     """ 
     ytt_api = YouTubeTranscriptApi() 
     content = ytt_api.fetch(video_id) 
-
     transcript_text = ' '.join([segment.text for segment in content])
     return transcript_text
 
