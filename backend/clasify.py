@@ -33,19 +33,29 @@ def predict_label(news):
     new_def_test = pd.DataFrame(testing_news)
     new_def_test['text'] = new_def_test['text'].apply(remove)
     new_x_test = new_def_test['text']
+    print("I was here")
+    print(new_x_test)
     new_xv_test = vektor.transform(new_x_test)
     pred_LR = LR.predict(new_xv_test)[0]
     pred_DT = DT.predict(new_xv_test)[0]
     pred_GB = GB.predict(new_xv_test)[0]
     pred_RF = RF.predict(new_xv_test)[0]
+    probs = [
+        LR.predict_proba(new_xv_test)[0][1],
+        DT.predict_proba(new_xv_test)[0][1],
+        GB.predict_proba(new_xv_test)[0][1],
+        RF.predict_proba(new_xv_test)[0][1]
+    ]
+    #total_prob = sum(probs)  
+    print(probs)
     print(pred_LR)
     print(pred_DT)
     print(pred_GB)
     print(pred_RF)
-    predictions = [pred_LR, pred_DT, pred_GB, pred_RF]
     majority = 0
     if (pred_DT or pred_GB or pred_RF or pred_LR):
         majority = 1
+
     return output_label(majority)
 
 
