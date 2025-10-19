@@ -1,5 +1,5 @@
-#Pagaidām versija, kas itkā strādā, bet vajag vēl ko pievienot precīzākiem aprēķiniem. Kā arī dažas lietas patīrīt. Pievienoju gadījuma pēc
 import pandas as pd
+import nltk
 import numpy as np #bibliotēka izmantota mašīn mācībā
 import seaborn as sb #datu vizualizācija
 from sklearn.model_selection import train_test_split #dala masīvus nejaušās apakškopās priekš mācīšanās un testa datiem
@@ -13,6 +13,7 @@ from sklearn.linear_model import LogisticRegression #Klasificētu problēmu risi
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.ensemble import RandomForestClassifier
+from nltk.corpus import stopwords
 
 fake_data = pd.read_csv('Fake.csv') #atver failu ar aplamo informāciju (lai mācītos izmanto)
 true_data = pd.read_csv('True.csv') #atver failu ar patieso informāciju
@@ -51,6 +52,7 @@ def remove(text): #Noņemam nevajadzīgās zīmes no lapas, lai spētu veikt pā
     text = re.sub(r'[%s]'%re.escape(string.punctuation),'',text)
     text = re.sub(r'\n','',text)
     text = re.sub(r'\w*\d\w*','',text)
+
     return text
 nepieciesamie['text']= nepieciesamie['text'].apply(remove)
 
@@ -59,7 +61,7 @@ x = nepieciesamie['text'] #Izveidojam atkarīgo un neatkarīgo vērtību apreķi
 y = nepieciesamie['class']
 x_train, x_test, y_train,y_test=train_test_split(x,y,test_size=0.25, random_state=42)#atdala mācīšanās un treniņa datus
 
-vektor = TfidfVectorizer()
+vektor = TfidfVectorizer(stop_words='english', max_df=0.7, ngram_range=(1, 2)) # max_df = 0.7 ignorēs vārdus, kas parādās vairāk nekā 70% dokumentu
 xv_train = vektor.fit_transform(x_train) # x vektoru apmācība
 xv_test = vektor.transform(x_test) # x vektoru tests
 
@@ -76,37 +78,15 @@ def model_evaluation(model, name, xv_train, y_train, xv_test, y_test):
     print(classification_report(y_test, predictions))
     return model
 
-LR = model_evaluation(LogisticRegression(random_state=42), "Logistic Regression", xv_train, y_train, xv_test, y_test)
-DT = model_evaluation(DecisionTreeClassifier(random_state=42), "Decision Tree", xv_train, y_train, xv_test, y_test)
+LR = model_evaluation(LogisticRegression(random_state=42, class_weight = 'balanced'), "Logistic Regression", xv_train, y_train, xv_test, y_test)
+DT = model_evaluation(DecisionTreeClassifier(random_state=42, class_weight='balanced', max_depth=8), "Decision Tree", xv_train, y_train, xv_test, y_test)
 GB = model_evaluation(GradientBoostingClassifier(random_state=42), "Gradient Boosting", xv_train, y_train, xv_test, y_test)
-RF = model_evaluation(RandomForestClassifier(random_state=42), "Random Forest", xv_train, y_train, xv_test, y_test)
+RF = model_evaluation(RandomForestClassifier(random_state=42, class_weight='balanced', max_depth=12), "Random Forest", xv_train, y_train, xv_test, y_test)
 
-
-''' Vecā versija, bet gadījuma pēc, lai pagaidām atrodas
-LR = LogisticRegression()
-LR.fit(xv_train, y_train)#Trenē modeli
-noteiktLR = LR.predict(xv_test)
-LR.score(xv_test, y_test)#Testē modeli
-#print(classification_report(y_test, noteiktLR)) #Nosaka, cik patiesa info
-
-DT = DecisionTreeClassifier()
-DT.fit(xv_train, y_train)
-noteiktDT = DT.predict(xv_test)
-DT.score(xv_test, y_test)#Testē modeli
-#print(classification_report(y_test, noteiktDT)) #Nosaka, cik patiesa info
-
-GB = GradientBoostingClassifier(random_state=0)
-GB.fit(xv_train, y_train)
-noteiktGB = GB.predict(xv_test)
-GB.score(xv_test, y_test)
-#print(classification_report(y_test, noteiktGB)) #Nosaka, cik patiesa info
-
-RF = RandomForestClassifier(random_state=0)
-RF.fit(xv_train, y_train)
-noteiktRF = RF.predict(xv_test)
-RF.score(xv_test, y_test)
-#print(classification_report(y_test, noteiktRF)) #Nosaka, cik patiesa info
-'''
+#LR - Aprēķina varbūtību, ka ziņa pieder klasei 1 (patiesai)
+#DT - Klasificē datus pēc jā/nē jautājumiem
+#GB - Savāc visu "koku" balsis, lai izteiktu gala vērtējumu (izmanto asembleri)
+#RF -
 
 #Manuāla pārbaude:
 def output_label(n):
